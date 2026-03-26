@@ -7,6 +7,58 @@ pipeline {
 
     stages {
 
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t bunnykadari/flask-app .'
+            }
+        }
+
+        stage('Login to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-credentials',
+                    usernameVariable: 'USERNAME',
+                    passwordVariable: 'PASSWORD'
+                )]) {
+                    sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
+                }
+            }
+        }
+
+        stage('Push Image') {
+            steps {
+                sh 'docker push bunnykadari/flask-app'
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                sh '''
+                docker stop flask-container || true
+                docker rm flask-container || true
+                docker run -d -p 5001:5000 --name flask-container bunnykadari/flask-app
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "SUCCESS ✅"
+        }
+        failure {
+            echo "FAILED ❌"
+        }
+    }
+}pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "bunnykadari/flask-app"
+    }
+
+    stages {
+
         stage('Clone Code') {
             steps {
                 git branch: 'master', url: 'https://github.com/Bunny-Kadari/project.git'
