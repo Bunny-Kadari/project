@@ -9,7 +9,7 @@ pipeline {
 
         stage('Clone Code') {
             steps {
-                git 'https://github.com/Bunny-Kadari/project.git'
+                git branch: 'main', url: 'https://github.com/Bunny-Kadari/project.git'
             }
         }
 
@@ -33,7 +33,7 @@ pipeline {
             }
         }
 
-        stage('Push Image to DockerHub') {
+        stage('Push Image') {
             steps {
                 sh "docker push ${DOCKER_IMAGE}:latest"
             }
@@ -52,9 +52,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Build & Deployment Successful!"
+            echo "SUCCESS ✅"
         }
         failure {
-            echo "❌ Pipeline Failed!"
+            echo "FAILED ❌"
         }
     }
+}
